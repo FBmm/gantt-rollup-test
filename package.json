@@ -1,0 +1,24 @@
+{
+  "name": "gantt-chart",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "rollup -c -w",
+    "build": "rollup -c",
+    "test": "node build/index.js --w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "zrender": "^4.3.2"
+  },
+  "devDependencies": {
+    "commander": "^6.2.0",
+    "lodash": "^4.17.20",
+    "rollup": "^2.33.1",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0"
+  }
+}
