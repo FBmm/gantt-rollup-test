@@ -1,10 +1,9 @@
 import nodeResolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-
-export default {
-  input: 'src/main.js',
+const test_config = {
+  input: 'test/main.js',
   output: {
-    file: 'dist/bundle.js',
+    file: 'test/dist/bundle.js',
     format: 'iife',
   },
   plugins: [
@@ -12,3 +11,5 @@ export default {
     commonjs(),
   ],
 };
+
+export default test_config
