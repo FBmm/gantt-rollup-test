@@ -3,7 +3,7 @@ import dayjs from "dayjs"
 class Gantt {
   ganttInstance;
   startDate = dayjs('2020-11-13')
-  endDate = dayjs('2021-11-14')
+  endDate = dayjs('2021-11-15')
   constructor(dom, opt = {}) {
     this.dom = dom;
   }
@@ -13,21 +13,34 @@ class Gantt {
     this.groupData()
     return this.ganttInstance;
   }
-  groupData(mode) {
+  groupData(mode = 'month') {
     let currentDate = this.startDate
     const days = this.endDate.diff(this.startDate, 'day')
     const list = []
     let sub = []
-    for (let i = 0; i < days; i++) {
-      const week = dayjs(currentDate).day()
-      sub.push(currentDate.format('YYYY/MM/DD'))
-      if (week === 0) {
-        list.push(sub)
-        sub = []
+    for (let i = 0; i <= days; i++) {
+      if (mode === 'week') {
+        const week = dayjs(currentDate).day()
+        if (week === 0) {
+          list.push(sub)
+          sub = []
+        }
       }
+      if (mode === 'month') {
+        const date = dayjs(currentDate).date()
+        if (date === 1) {
+          list.push(sub)
+          sub = []
+        }
+      }
+      sub.push(currentDate.format('YYYY/MM/DD'))
       currentDate = currentDate.add(1, 'day')
     }
+    if (sub.length) {
+      list.push(sub)
+    }
     console.log(list)
+    return list
   }
   drawTopRect(day) {
     const height = 30
