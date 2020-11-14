@@ -1,59 +1,5 @@
 import zrender  from "zrender"
-import dayjs from "dayjs"
-class Gantt {
-  ganttInstance;
-  startDate = dayjs('2020-11-13')
-  endDate = dayjs('2021-11-14')
-  constructor(dom, opt = {}) {
-    this.dom = dom;
-  }
-  init() {
-    this.ganttInstance = zrender.init(this.dom);
-    this.drawTopRect(7)
-    this.groupData()
-    return this.ganttInstance;
-  }
-  groupData(mode) {
-    let currentDate = this.startDate
-    const days = this.endDate.diff(this.startDate, 'day')
-    const list = []
-    let sub = []
-    for (let i = 0; i < days; i++) {
-      const week = dayjs(currentDate).day()
-      sub.push(currentDate.format('YYYY/MM/DD'))
-      if (week === 0) {
-        list.push(sub)
-        sub = []
-      }
-      currentDate = currentDate.add(1, 'day')
-    }
-    console.log(list)
-  }
-  drawTopRect(day) {
-    const height = 30
-    const offset = 2
-    const dayWidth = 30
-    const width = day * dayWidth
-    for (let i = 0; i < 7; i++) {
-      const rect = new zrender.Rect({
-        shape: {
-            x: i * (width + offset),
-            y: 0,
-            width: width,
-            height: height,
-        },
-        style: {
-            fill: '#e0e6ee',
-            text: "2020.11.09-2020.11.15",
-        }
-      });
-      this.ganttInstance.add(rect);
-    }
-  }
-}
-
-const gantt = new Gantt(document.getElementById('main'));
-gantt.init();
+var zr = zrender.init(document.getElementById('main'));
 
 var ganttHeaderYears = new zrender.Rect({
   shape: {
@@ -67,7 +13,7 @@ var ganttHeaderYears = new zrender.Rect({
       text: "2020.11.09-2020.11.15",
   }
 });
-
+zr.add(ganttHeaderYears);
 
 function drawDay() {
   for (let i = 0; i < 7; i++) {
@@ -90,7 +36,7 @@ function drawDay() {
   }
 }
 
-// drawDay()
+drawDay()
 
 function drawWeek() {
   const chineseWeeks = ["日", "一", "二", "三", "四", "五", "六"];
@@ -112,7 +58,7 @@ function drawWeek() {
   }
 }
 
-// drawWeek()
+drawWeek()
 
 function drawColumn(x = 0, y = 0) {
   for (let i = 0; i < 7; i++) {
@@ -130,7 +76,7 @@ function drawColumn(x = 0, y = 0) {
     zr.add(ganttContentDay);
   }
 }
-// drawColumn()
+drawColumn()
 
 
 

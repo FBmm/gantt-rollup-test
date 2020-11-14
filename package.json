@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dayjs": "^1.9.6",
     "zrender": "^4.3.2"
   },
   "devDependencies": {
