@@ -1,13 +1,23 @@
-import zrender  from "zrender"
+import zrender from "zrender"
 import dayjs from "dayjs"
 class Gantt {
   ganttInstance;
   startDate = dayjs('2020-11-13');
   endDate = dayjs('2021-11-15');
-  dateGroup;
+
+  dateGroupMode = "week";
+
+  dateGroup = [];
+
+  gapNum = 2;
+  columnWidth = 30;
 
   // header
-  yearH = 30;
+  yearHeight = 30;
+  dateHeight = 40;
+
+  // body
+  bodyHeight = 200;
 
   constructor(dom, opt = {}) {
     this.dom = dom;
@@ -16,41 +26,113 @@ class Gantt {
     this.ganttInstance = zrender.init(this.dom, {
       width: 5000,
     });
-    this.dateGroup = this.groupData()
-    this.drawYears()
+    this.dateGroup = this.getDateGroup(this.dateGroupMode)
+    this.CNWeeks = this.getCNWeeks()
+    this.drawTable()
     return this.ganttInstance;
   }
-  drawYears() {
-    let startX = 0;
+  getCNWeeks() {
+    return ['日','一','二','三','四','五','六']
+  }
+  drawTable() {
+    let yearX = 0;
     let dateX = 0;
-    this.dateGroup.forEach(el => {
-      const startDate = el?.[0]
-      const endDate = el?.[el.length - 1]
-      const text = startDate && endDate ? `${startDate.replace(/-/g,'.')}-${endDate.replace(/-/g,'.')}` : ''
-      startX = this.drawTopRect(el.length, startX, text)
-      dateX = this.drawTopDate(el, dateX)
+    let bodyX = 0;
+    this.dateGroup.forEach(dates => {
+      const startDate = dates?.[0]
+      const endDate = dates?.[dates.length - 1]
+      const text = startDate && endDate ? `${startDate.replace(/-/g, '.')}-${endDate.replace(/-/g, '.')}` : ''
+      yearX = this.drawHeaderYear(dates.length, yearX, text)
+      dateX = this.drawHeaderDate(dates, dateX)
+      bodyX = this.drawBody(dates, bodyX)
     });
   }
-  drawTopDate(dates, startX) {
+  drawBody(dates, startX) {
     dates.forEach(date => {
+      const isWeekend = [0, 6].includes(dayjs(date).day())
+      const isSUN = dayjs(date).day() === 0
+      const rectY = this.yearHeight + this.dateHeight + this.gapNum
       const rect = new zrender.Rect({
         shape: {
-            x: startX,
-            y: this.yearH,
-            width: 30,
-            height: 30,
+          x: startX,
+          y: rectY,
+          width: this.columnWidth,
+          height: this.bodyHeight,
         },
         style: {
-            fill: '#f2f5fa',
-            text: dayjs(date).date(),
+          fill: isWeekend ? '#f2f5fa' : "#fff",
         }
       });
       this.ganttInstance.add(rect)
-      startX += 30
+
+      const lineX = startX - this.gapNum / 2
+      const lineY1 = this.yearHeight + this.dateHeight + this.gapNum
+      const line = new zrender.Line({
+        shape: {
+          x1: lineX,
+          y1: lineY1,
+          x2: lineX,
+          y2: this.bodyHeight + lineY1,
+        },
+        style: {
+          stroke: isSUN ? '#ebecf0' : '#f0f0f0',
+          lineWidth: this.gapNum,
+        }
+      });
+      this.ganttInstance.add(line)
+
+      startX += this.columnWidth
     })
-    return startX + 2
+    return startX + this.gapNum
   }
-  groupData(mode = 'week') {
+  drawHeaderDate(dates, startX) {
+    dates.forEach(date => {
+      const supRect = new zrender.Rect({
+        shape: {
+          x: startX,
+          y: this.yearHeight,
+          width: this.columnWidth,
+          height: 0,
+        },
+        style: {
+          textFill: "#bcbcbc",
+          textOffset: [5, 12],
+          fontSize: 10,
+          text: this.getHeaderDateText(date, true),
+        },
+        zlevel: 10,
+      });
+      this.ganttInstance.add(supRect)
+
+      const dateRect = new zrender.Rect({
+        shape: {
+          x: startX,
+          y: this.yearHeight,
+          width: this.columnWidth,
+          height: this.dateHeight,
+        },
+        style: {
+          fill: '#f2f5fa',
+          textOffset: [0, 5],
+          text: this.getHeaderDateText(date),
+        },
+        zlevel: 9,
+      });
+      this.ganttInstance.add(dateRect)
+      startX += this.columnWidth
+    })
+    return startX + this.gapNum
+  }
+  getHeaderDateText(dateStr, isSup = false) {
+    const day = this.CNWeeks[dayjs(dateStr).day()]
+    const date = dayjs(dateStr).date()
+    if (this.dateGroupMode === 'week') {
+      return isSup ? date : day
+    } else {
+      return isSup ? day : date
+    }
+  }
+  getDateGroup(mode = 'week') {
     let currentDate = this.startDate
     const days = this.endDate.diff(this.startDate, 'day')
     const list = []
@@ -58,7 +140,7 @@ class Gantt {
     for (let i = 0; i <= days; i++) {
       if (mode === 'week') {
         const week = dayjs(currentDate).day()
-        if (week === 0) {
+        if (week === 1) {
           list.push(sub)
           sub = []
         }
@@ -79,21 +161,21 @@ class Gantt {
     console.log(list)
     return list
   }
-  drawTopRect(dayNum, startX = 0, text) {
-    const height = this.yearH
+  drawHeaderYear(dayNum, startX = 0, text) {
+    const height = this.yearHeight
     const offset = 2
     const dayWidth = 30
     const width = dayNum * dayWidth
     const rect = new zrender.Rect({
       shape: {
-          x: startX,
-          y: 0,
-          width: width,
-          height: height,
+        x: startX,
+        y: 0,
+        width: width,
+        height: height,
       },
       style: {
-          fill: '#e0e6ee',
-          text: width > 150 ? text : "",
+        fill: '#e0e6ee',
+        text: width > 150 ? text : "",
       }
     });
     this.ganttInstance.add(rect);
@@ -103,94 +185,5 @@ class Gantt {
 
 const gantt = new Gantt(document.getElementById('main'));
 gantt.init();
-
-var ganttHeaderYears = new zrender.Rect({
-  shape: {
-      x: 0,
-      y: 0,
-      width: 210,
-      height: 30,
-  },
-  style: {
-      fill: '#e0e6ee',
-      text: "2020.11.09-2020.11.15",
-  }
-});
-
-
-function drawDay() {
-  for (let i = 0; i < 7; i++) {
-    var ganttHeaderWeek = new zrender.Rect({
-      shape: {
-          x: i * 30,
-          y: 30,
-          width: 30,
-          height: 10,
-      },
-      style: {
-          fill: '#f2f5fa',
-          text: i,
-          textFill: "#bcbcbc",
-          textPosition: [20,8],
-      },
-      zlevel: 10,
-    });
-    zr.add(ganttHeaderWeek);
-  }
-}
-
-// drawDay()
-
-function drawWeek() {
-  const chineseWeeks = ["日", "一", "二", "三", "四", "五", "六"];
-  for (let i = 0; i < 7; i++) {
-    var ganttHeaderWeek = new zrender.Rect({
-      shape: {
-          x: i * 30,
-          y: 40,
-          width: 30,
-          height: 30,
-      },
-      style: {
-          fill: '#f2f5fa',
-          text: chineseWeeks[i],
-      },
-      zlevel: 9,
-    });
-    zr.add(ganttHeaderWeek);
-  }
-}
-
-// drawWeek()
-
-function drawColumn(x = 0, y = 0) {
-  for (let i = 0; i < 7; i++) {
-    const ganttContentDay = new zrender.Rect({
-      shape: {
-          x: i * 30 + 28,
-          y: 60,
-          width: 2,
-          height: 200,
-      },
-      style: {
-          fill: '#efefef',
-      }
-    });
-    zr.add(ganttContentDay);
-  }
-}
-// drawColumn()
-
-
-
-
-
-var i = 2000;
-document.getElementById("btn").addEventListener('click', function() {
- i = i + 100
-  zr.resize({
-    width: i
-  })
-})
 
 
